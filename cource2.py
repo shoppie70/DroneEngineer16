@@ -1,6 +1,28 @@
 from dronekit import connect, VehicleMode
 import time
 
+def move_in_direction(distance, direction):
+    """
+    ドローンを指定された方向に移動させる関数。
+
+    :param distance: 移動する距離（単位: 度）
+    :param direction: 移動する方向（"east", "west", "north", "south"）
+    """
+    # メートルを度に変換
+    distance = distance * 0.0000009
+
+    target_location = vehicle.location.global_relative_frame
+    if direction == "east":
+        target_location.lon += distance
+    elif direction == "west":
+        target_location.lon -= distance
+    elif direction == "north":
+        target_location.lat += distance
+    elif direction == "south":
+        target_location.lat -= distance
+
+    vehicle.simple_goto(target_location)
+
 # ドローンに接続
 vehicle = connect('tcp:127.0.0.1:5762')
 
@@ -12,6 +34,9 @@ vehicle.arm()
 
 # ドローンを離陸させる
 target_altitude = 10  # 離陸したい高さ（メートル）
+target_move_distance = 10 # 移動したい距離（メートル）
+
+# 離陸したことを通知
 print("Taking off to {} meters...".format(target_altitude))
 
 vehicle.simple_takeoff(target_altitude)
@@ -27,25 +52,6 @@ while True:
         break
     time.sleep(1)
 
-def move_in_direction(distance, direction):
-    """
-    ドローンを指定された方向に移動させる関数。
-
-    :param distance: 移動する距離（単位: 度）
-    :param direction: 移動する方向（"east", "west", "north", "south"）
-    """
-    target_location = vehicle.location.global_relative_frame
-    if direction == "east":
-        target_location.lon += distance
-    elif direction == "west":
-        target_location.lon -= distance
-    elif direction == "north":
-        target_location.lat += distance
-    elif direction == "south":
-        target_location.lat -= distance
-
-    vehicle.simple_goto(target_location)
-
     # 移動完了まで待機
     while True:
         remaining_distance = 0
@@ -54,21 +60,21 @@ def move_in_direction(distance, direction):
         elif direction in ["north", "south"]:
             remaining_distance = abs(vehicle.location.global_relative_frame.lat - target_location.lat)
 
-        if remaining_distance < 0.00001:  # 0.00001度未満の距離になったら移動完了とみなす
+        if remaining_distance < 0.00005:  # 0.00005度未満の距離になったら移動完了とみなす
             break
         time.sleep(1)
 
-# 東に50メートル移動
-move_in_direction(0.00045, "east")  # 約0.00045度は50メートルに相当
+# 東に指定した距離分を移動
+move_in_direction(target_move_distance, "east")
 
-# 北に50メートル移動
-move_in_direction(0.00045, "north")  # 約0.00045度は50メートルに相当
+# 北に指定した距離分を移動
+move_in_direction(target_move_distance, "north")
 
-# 西に50メートル移動
-move_in_direction(0.00045, "west")  # 約0.00045度は50メートルに相当
+# 西に指定した距離分を移動
+move_in_direction(target_move_distance, "west")
 
-# 南に50メートル移動
-move_in_direction(0.00045, "south")  # 約0.00045度は50メートルに相当
+# 南に指定した距離分を移動
+move_in_direction(target_move_distance, "south")
 
 # LAND
 print("Moving in different directions completed. Landing...")
